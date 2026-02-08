@@ -1,20 +1,10 @@
-/**
- * LoadingScreen.jsx
- * 
- * Full-screen loading component shown during login/redirect
- * Displays welcome message with animated spinner
- */
 
 import { useState, useEffect } from 'react';
 
 export default function LoadingScreen({ message = "Welcome to Dashboard" }) {
   const [displayedText, setDisplayedText] = useState('');
 
-  /**
-   * Animate text character by character
-   * Creates a typewriter effect
-   */
-  useEffect(() => {
+    useEffect(() => {
     let currentIndex = 0;
     const interval = setInterval(() => {
       if (currentIndex < message.length) {

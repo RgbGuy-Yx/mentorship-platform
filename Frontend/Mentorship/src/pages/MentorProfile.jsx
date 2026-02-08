@@ -5,28 +5,14 @@ import { AuthContext } from '../context/AuthContext';
 import apiClient from '../utils/api';
 import toast from 'react-hot-toast';
 
-/**
- * MentorProfileModal Component
- * 
- * Clean, minimalistic mentor profile display
- * Features smooth animations and essential information only
- * 
- * Props:
- * - mentorId: ID of the mentor to display
- * - isOpen: Boolean to control modal visibility
- * - onClose: Callback function when modal closes
- */
 export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
-  // const { id } = useParams();
   const id = mentorId;
   const { isLoading: authLoading, token } = useContext(AuthContext);
 
-  // Component state
   const [mentor, setMentor] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch mentor data on mount
   useEffect(() => {
     if (!isOpen || !id) return;
 
@@ -49,13 +35,13 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
 
         const mentorData = response.data.data;
 
-        // Ensure this is a mentor
         if (mentorData.role !== 'mentor' && mentorData.role !== 'admin') {
           throw new Error('This profile is not a mentor');
         }
 
         setMentor(mentorData);
       } catch (err) {
+        console.error("Error:", err);
         let errorMessage = 'Failed to load mentor profile. Please try again.';
 
         if (err.response?.status === 401) {
@@ -67,9 +53,7 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
           errorMessage = err.response.data.message;
         } else if (err.request) {
           errorMessage = 'Unable to connect to server.';
-          console.error('Network error:', err.request);
         } else {
-          console.error('Error fetching mentor:', err);
         }
 
         setError(errorMessage);
@@ -82,7 +66,6 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
     fetchMentor();
   }, [id, token, isOpen, onClose]);
 
-  // Get initials for avatar
   const getInitials = (name) => {
     return name
       ?.split(' ')
@@ -95,10 +78,8 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
     onClose();
   };
 
-  // Don't render if modal is not open
   if (!isOpen) return null;
 
-  // Loading state
   if (isLoading) {
     return (
       <AnimatePresence>
@@ -139,7 +120,6 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
     );
   }
 
-  // Error state
   if (error && !mentor) {
     return (
       <AnimatePresence>
@@ -262,9 +242,13 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
+                  className="flex items-start gap-3"
                 >
-                  <p className="text-sm text-slate-500 font-medium mb-2">Expertise</p>
-                  <p className="text-base text-slate-900 font-medium">{mentor.expertise}</p>
+                  <div className="w-[18px] h-[18px] shrink-0" />
+                  <div>
+                    <p className="text-xs text-slate-500 font-medium mb-2">Expertise</p>
+                    <p className="text-base text-slate-900 font-medium">{mentor.expertise}</p>
+                  </div>
                 </motion.div>
               )}
 
@@ -328,9 +312,13 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
+                  className="flex items-start gap-3"
                 >
-                  <p className="text-xs text-slate-500 font-medium mb-2.5">About</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">{mentor.bio}</p>
+                  <div className="w-[18px] h-[18px] shrink-0" />
+                  <div>
+                    <p className="text-xs text-slate-500 font-medium mb-2.5">About</p>
+                    <p className="text-sm text-slate-700 leading-relaxed">{mentor.bio}</p>
+                  </div>
                 </motion.div>
               )}
 
@@ -340,21 +328,25 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.55 }}
+                  className="flex items-start gap-3"
                 >
-                  <p className="text-xs text-slate-500 font-medium mb-3">Skills & Expertise</p>
-                  <div className="flex flex-wrap gap-2">
-                    {mentor.skills.split(',').map((skill, idx) => (
-                      <motion.span
-                        key={idx}
-                        className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-100 hover:border-blue-300 hover:bg-blue-100 transition-colors cursor-default"
-                        initial={{ opacity: 0, scale: 0.85 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ y: -2 }}
-                        transition={{ delay: 0.55 + idx * 0.04, type: 'spring', stiffness: 400 }}
-                      >
-                        {skill.trim()}
-                      </motion.span>
-                    ))}
+                  <div className="w-[18px] h-[18px] shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 font-medium mb-3">Skills & Expertise</p>
+                    <div className="flex flex-wrap gap-2">
+                      {mentor.skills.split(',').map((skill, idx) => (
+                        <motion.span
+                          key={idx}
+                          className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium border border-blue-100 hover:border-blue-300 hover:bg-blue-100 transition-colors cursor-default"
+                          initial={{ opacity: 0, scale: 0.85 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          whileHover={{ y: -2 }}
+                          transition={{ delay: 0.55 + idx * 0.04, type: 'spring', stiffness: 400 }}
+                        >
+                          {skill.trim()}
+                        </motion.span>
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -365,9 +357,13 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
+                  className="flex items-start gap-3"
                 >
-                  <p className="text-xs text-slate-500 font-medium mb-2.5">Experience</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">{mentor.experience}</p>
+                  <div className="w-[18px] h-[18px] shrink-0" />
+                  <div>
+                    <p className="text-xs text-slate-500 font-medium mb-2.5">Experience</p>
+                    <p className="text-sm text-slate-700 leading-relaxed">{mentor.experience}</p>
+                  </div>
                 </motion.div>
               )}
 
@@ -377,9 +373,13 @@ export default function MentorProfileModal({ mentorId, isOpen, onClose }) {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.65 }}
+                  className="flex items-start gap-3"
                 >
-                  <p className="text-xs text-slate-500 font-medium mb-2.5">Goals & Vision</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">{mentor.goals}</p>
+                  <div className="w-[18px] h-[18px] shrink-0" />
+                  <div>
+                    <p className="text-xs text-slate-500 font-medium mb-2.5">Goals & Vision</p>
+                    <p className="text-sm text-slate-700 leading-relaxed">{mentor.goals}</p>
+                  </div>
                 </motion.div>
               )}
             </motion.div>

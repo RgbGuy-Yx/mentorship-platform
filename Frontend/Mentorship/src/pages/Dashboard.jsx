@@ -34,21 +34,15 @@ import { ShimmerButton } from '../components/ui/shimmer-button';
 import { Marquee } from '../components/ui/marquee';
 import { DottedMap } from '../components/ui/dotted-map';
 
-/**
- * Enhanced Dashboard Component with Magic UI
- * 
- * Modern student dashboard inspired by Skillio with:
- * - Sidebar navigation structure
- * - Enhanced hero section with magic UI components
- * - Stat cards with animated numbers
- * - Spotlight cards for mentors
- * - Responsive layout
- */
 export default function Dashboard() {
-  const { user, isLoading } = useContext(AuthContext);
+  const { user, isLoading, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Show loading state while user data is being fetched
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -57,7 +51,6 @@ export default function Dashboard() {
     );
   }
 
-  // Get greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -65,7 +58,6 @@ export default function Dashboard() {
     return 'Good evening';
   };
 
-  // Mock data
   const stats = {
     requestsSent: 3,
     requestsCompleted: 1,
@@ -121,7 +113,6 @@ export default function Dashboard() {
     },
   ];
 
-  // Mentor Card Component
   const MentorCard = ({ mentor }) => (
     <div className="flex-shrink-0 w-full max-w-sm">
       <SpotlightCard className="overflow-hidden group cursor-pointer h-full hover:shadow-2xl transition-all duration-300">
@@ -212,15 +203,19 @@ export default function Dashboard() {
         {/* Sidebar Navigation */}
         <div className="hidden lg:block w-64 border-r border-indigo-100/40 bg-white/40 backdrop-blur-md overflow-y-auto">
           <div className="p-6">
-            <div className="flex items-center gap-3 mb-10">
+            <button 
+              onClick={() => navigate('/')}
+              className="flex items-center gap-3 mb-10 hover:opacity-80 transition-opacity"
+            >
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                 M
               </div>
               <span className="font-bold text-lg text-gray-900">Mentorship</span>
-            </div>
+            </button>
 
             <nav className="space-y-1">
               {[
+                { icon: Home, label: 'Home', action: 'home' },
                 { icon: Home, label: 'Dashboard', active: true },
                 { icon: Compass, label: 'Browse Mentors' },
                 { icon: Send, label: 'My Requests' },
@@ -236,6 +231,7 @@ export default function Dashboard() {
                       : 'text-gray-600 hover:bg-gray-100/40'
                   }`}
                   onClick={() => {
+                    if (item.action === 'home') navigate('/');
                     if (item.label === 'Browse Mentors') navigate('/browse-mentors');
                     if (item.label === 'My Requests') navigate('/requests');
                     if (item.label === 'My Mentors') navigate('/my-mentors');
@@ -268,6 +264,15 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="w-full mt-10 px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
           </div>
         </div>
 

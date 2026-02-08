@@ -16,8 +16,8 @@ import Requests from "./pages/Requests";
 import MyMentors from "./pages/MyMentors";
 import AdminDashboard from "./pages/AdminDashboard";
 import Settings from "./pages/Settings";
+import Unauthorized from "./pages/Unauthorized";
 
-// Layout with Footer only (Navbar is built into Landing page)
 function LandingLayout() {
   return (
     <>
@@ -42,6 +42,7 @@ export default function App() {
             {/* Auth pages - NO Navbar/Footer */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* Protected Routes - NO Navbar/Footer */}
             <Route element={<ProtectedRoute />}>

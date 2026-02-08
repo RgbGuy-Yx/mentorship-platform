@@ -1,12 +1,6 @@
 import { Component } from 'react';
 import { AlertCircle } from 'lucide-react';
 
-/**
- * Error Boundary Component
- * 
- * Catches errors in child components and displays a fallback UI
- * Prevents entire app from crashing when a component has an error
- */
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -18,7 +12,6 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
   }
 
   render() {

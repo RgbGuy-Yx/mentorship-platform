@@ -7,8 +7,13 @@ import { AuthContext } from '../context/AuthContext';
 import apiClient from '../utils/api';
 
 export default function AdminDashboard() {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   const [pendingMentors, setPendingMentors] = useState([]);
   const [approvedMentors, setApprovedMentors] = useState([]);
   const [rejectedMentors, setRejectedMentors] = useState([]);
@@ -22,7 +27,6 @@ export default function AdminDashboard() {
     rejected: 0,
   });
 
-  // Fetch pending mentors on mount
   useEffect(() => {
     const fetchPendingMentors = async () => {
       try {
@@ -53,7 +57,6 @@ export default function AdminDashboard() {
     fetchPendingMentors();
   }, []);
 
-  // Fetch approved mentors
   const fetchApprovedMentors = async () => {
     try {
       const response = await apiClient.get('/admin/approved-mentors');
@@ -65,12 +68,10 @@ export default function AdminDashboard() {
         }));
       }
     } catch (err) {
-      console.error('Error fetching approved mentors:', err);
       toast.error('Failed to fetch approved mentors');
     }
   };
 
-  // Fetch rejected mentors
   const fetchRejectedMentors = async () => {
     try {
       const response = await apiClient.get('/admin/rejected-mentors');
@@ -82,12 +83,10 @@ export default function AdminDashboard() {
         }));
       }
     } catch (err) {
-      console.error('Error fetching rejected mentors:', err);
       toast.error('Failed to fetch rejected mentors');
     }
   };
 
-  // Handle tab change
   const handleTabChange = async (tab) => {
     setActiveTab(tab);
     if (tab === 'approved' && approvedMentors.length === 0) {
@@ -97,7 +96,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Handle approve mentor
   const handleApproveMentor = async (mentorId) => {
     try {
       setActioningId(mentorId);
@@ -131,7 +129,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Handle reject mentor
   const handleRejectMentor = async (mentorId) => {
     try {
       setActioningId(mentorId);
@@ -165,7 +162,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Render loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -195,7 +191,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // Animation variants
   const pageVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -276,6 +271,173 @@ export default function AdminDashboard() {
     },
   };
 
+  const MentorRow = ({ mentor, index }) => {
+    return (
+      <motion.div
+        variants={mentorRowVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        transition={{ delay: index * 0.08 }}
+        layout
+        className="px-6 py-5 hover:bg-slate-50 transition-colors duration-200"
+      >
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1 flex gap-4">
+            <motion.div
+              className="flex-shrink-0"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", delay: index * 0.08 + 0.2 }}
+            >
+              <motion.div
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-blue-100"
+                whileHover={{ scale: 1.15, rotate: 5 }}
+              >
+                {mentor.fullName.charAt(0).toUpperCase()}
+              </motion.div>
+            </motion.div>
+            <motion.div
+              className="flex-1 min-w-0"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.08 + 0.1 }}
+            >
+              <h3 className="font-semibold text-slate-900 truncate">
+                {mentor.fullName}
+              </h3>
+              <p className="text-sm text-slate-600 flex items-center gap-1 mt-1">
+                <Mail className="w-4 h-4" />
+                {mentor.email}
+              </p>
+              <motion.div
+                className="flex flex-wrap gap-4 mt-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.08 + 0.2 }}
+              >
+                {mentor.currentRole && (
+                  <motion.div className="flex items-center gap-2" whileHover={{ x: 5 }}>
+                    <User className="w-4 h-4 text-slate-400" />
+                    <span className="text-sm text-slate-700">{mentor.currentRole}</span>
+                  </motion.div>
+                )}
+                {mentor.skills && (
+                  <motion.div className="flex items-center gap-2" whileHover={{ scale: 1.05 }}>
+                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                      {mentor.skills}
+                    </span>
+                  </motion.div>
+                )}
+              </motion.div>
+              {mentor.bio && (
+                <motion.p
+                  className="text-sm text-slate-600 mt-2 line-clamp-1"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.08 + 0.25 }}
+                >
+                  {mentor.bio}
+                </motion.p>
+              )}
+            </motion.div>
+          </div>
+          <motion.div
+            className="flex gap-3 flex-shrink-0"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.08 + 0.15 }}
+          >
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleApproveMentor(mentor._id)}
+              disabled={actioningId === mentor._id}
+              className="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>{actioningId === mentor._id ? 'Processing...' : 'Approve'}</span>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleRejectMentor(mentor._id)}
+              disabled={actioningId === mentor._id}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <XCircle className="w-4 h-4" />
+              <span>{actioningId === mentor._id ? 'Processing...' : 'Reject'}</span>
+            </motion.button>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  const MentorRowReadOnly = ({ mentor, index, status }) => {
+    const statusConfig = {
+      approved: { color: 'green', icon: CheckCircle, label: 'Approved' },
+      rejected: { color: 'red', icon: XCircle, label: 'Rejected' },
+    };
+    const config = statusConfig[status];
+    const StatusIcon = config.icon;
+
+    return (
+      <motion.div
+        variants={mentorRowVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        transition={{ delay: index * 0.08 }}
+        layout
+        className="px-6 py-5 hover:bg-slate-50 transition-colors duration-200"
+      >
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1 flex gap-4">
+            <motion.div
+              className="flex-shrink-0"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", delay: index * 0.08 + 0.2 }}
+            >
+              <motion.div
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-slate-200"
+                whileHover={{ scale: 1.15, rotate: 5 }}
+              >
+                {mentor.fullName.charAt(0).toUpperCase()}
+              </motion.div>
+            </motion.div>
+            <motion.div
+              className="flex-1 min-w-0"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.08 + 0.1 }}
+            >
+              <h3 className="font-semibold text-slate-900 truncate">
+                {mentor.fullName}
+              </h3>
+              <p className="text-sm text-slate-600 flex items-center gap-1 mt-1">
+                <Mail className="w-4 h-4" />
+                {mentor.email}
+              </p>
+            </motion.div>
+          </div>
+          <motion.div
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+              status === 'approved'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}
+            whileHover={{ scale: 1.05 }}
+          >
+            <StatusIcon className="w-4 h-4" />
+            <span className="font-medium text-sm">{config.label}</span>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <motion.div
       className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-slate-100"
@@ -301,20 +463,40 @@ export default function AdminDashboard() {
               <p className="text-sm text-slate-600 mt-1">Mentor approval management</p>
             </motion.div>
             <motion.div
-              className="flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-slate-100 to-slate-50 border border-slate-200"
+              className="flex items-center gap-3"
               initial={{ opacity: 0, x: 20, scale: 0.8 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              whileHover={{ scale: 1.05 }}
             >
-              <motion.div
-                className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-semibold"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
+              <motion.button
+                onClick={() => navigate('/')}
+                className="px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {user?.fullName?.charAt(0).toUpperCase() || 'A'}
+                Home
+              </motion.button>
+              <motion.button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-full bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Logout
+              </motion.button>
+              <motion.div
+                className="flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-slate-100 to-slate-50 border border-slate-200"
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-semibold"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  {user?.fullName?.charAt(0).toUpperCase() || 'A'}
+                </motion.div>
+                <span className="text-sm font-medium text-slate-700">Admin</span>
               </motion.div>
-              <span className="text-sm font-medium text-slate-700">Admin</span>
             </motion.div>
           </div>
         </div>
@@ -649,247 +831,4 @@ export default function AdminDashboard() {
       </div>
     </motion.div>
   );
-
-  // Mentor Row Component with Action Buttons (for pending)
-  function MentorRow({ mentor, index, activeTab }) {
-    return (
-      <motion.div
-        variants={mentorRowVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        transition={{ delay: index * 0.08 }}
-        layout
-        className="px-6 py-5 hover:bg-slate-50 transition-colors duration-200"
-      >
-        <div className="flex items-start justify-between gap-6">
-          {/* Mentor Info */}
-          <div className="flex-1 flex gap-4">
-            <motion.div
-              className="flex-shrink-0"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: index * 0.08 + 0.2 }}
-            >
-              <motion.div
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-blue-100"
-                whileHover={{ scale: 1.15, rotate: 5 }}
-              >
-                {mentor.fullName.charAt(0).toUpperCase()}
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              className="flex-1 min-w-0"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.08 + 0.1 }}
-            >
-              <h3 className="font-semibold text-slate-900 truncate">
-                {mentor.fullName}
-              </h3>
-              <p className="text-sm text-slate-600 flex items-center gap-1 mt-1">
-                <Mail className="w-4 h-4" />
-                {mentor.email}
-              </p>
-
-              {/* Details Grid */}
-              <motion.div
-                className="flex flex-wrap gap-4 mt-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.08 + 0.2 }}
-              >
-                {mentor.currentRole && (
-                  <motion.div
-                    className="flex items-center gap-2"
-                    whileHover={{ x: 5 }}
-                  >
-                    <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-700">{mentor.currentRole}</span>
-                  </motion.div>
-                )}
-                {mentor.skills && (
-                  <motion.div
-                    className="flex items-center gap-2"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
-                      {mentor.skills}
-                    </span>
-                  </motion.div>
-                )}
-              </motion.div>
-
-              {/* Bio */}
-              {mentor.bio && (
-                <motion.p
-                  className="text-sm text-slate-600 mt-2 line-clamp-1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.08 + 0.25 }}
-                >
-                  {mentor.bio}
-                </motion.p>
-              )}
-            </motion.div>
-          </div>
-
-          {/* Action Buttons */}
-          <motion.div
-            className="flex gap-3 flex-shrink-0"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.08 + 0.15 }}
-          >
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleApproveMentor(mentor._id)}
-              disabled={actioningId === mentor._id}
-              className="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 group relative overflow-hidden"
-            >
-              <motion.div
-                className="absolute inset-0 bg-green-600 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 -z-10"
-                initial={{ scaleX: 0 }}
-              ></motion.div>
-              <CheckCircle className="w-4 h-4" />
-              <span>{actioningId === mentor._id ? 'Processing...' : 'Approve'}</span>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleRejectMentor(mentor._id)}
-              disabled={actioningId === mentor._id}
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 group relative overflow-hidden"
-            >
-              <motion.div
-                className="absolute inset-0 bg-red-600 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 -z-10"
-                initial={{ scaleX: 0 }}
-              ></motion.div>
-              <XCircle className="w-4 h-4" />
-              <span>{actioningId === mentor._id ? 'Processing...' : 'Reject'}</span>
-            </motion.button>
-          </motion.div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  // Read-only Mentor Row (for approved/rejected)
-  function MentorRowReadOnly({ mentor, index, status }) {
-    const statusConfig = {
-      approved: { color: 'green', icon: CheckCircle, label: 'Approved' },
-      rejected: { color: 'red', icon: XCircle, label: 'Rejected' },
-    };
-    const config = statusConfig[status];
-    const StatusIcon = config.icon;
-
-    return (
-      <motion.div
-        variants={mentorRowVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        transition={{ delay: index * 0.08 }}
-        layout
-        className="px-6 py-5 hover:bg-slate-50 transition-colors duration-200"
-      >
-        <div className="flex items-start justify-between gap-6">
-          {/* Mentor Info */}
-          <div className="flex-1 flex gap-4">
-            <motion.div
-              className="flex-shrink-0"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: index * 0.08 + 0.2 }}
-            >
-              <motion.div
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-slate-200"
-                whileHover={{ scale: 1.15, rotate: 5 }}
-              >
-                {mentor.fullName.charAt(0).toUpperCase()}
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              className="flex-1 min-w-0"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.08 + 0.1 }}
-            >
-              <h3 className="font-semibold text-slate-900 truncate">
-                {mentor.fullName}
-              </h3>
-              <p className="text-sm text-slate-600 flex items-center gap-1 mt-1">
-                <Mail className="w-4 h-4" />
-                {mentor.email}
-              </p>
-
-              {/* Details Grid */}
-              <motion.div
-                className="flex flex-wrap gap-4 mt-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.08 + 0.2 }}
-              >
-                {mentor.currentRole && (
-                  <motion.div
-                    className="flex items-center gap-2"
-                    whileHover={{ x: 5 }}
-                  >
-                    <User className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-700">{mentor.currentRole}</span>
-                  </motion.div>
-                )}
-                {mentor.skills && (
-                  <motion.div
-                    className="flex items-center gap-2"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                      {mentor.skills}
-                    </span>
-                  </motion.div>
-                )}
-              </motion.div>
-
-              {/* Bio */}
-              {mentor.bio && (
-                <motion.p
-                  className="text-sm text-slate-600 mt-2 line-clamp-1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.08 + 0.25 }}
-                >
-                  {mentor.bio}
-                </motion.p>
-              )}
-            </motion.div>
-          </div>
-
-          {/* Status Badge */}
-          <motion.div
-            className="flex-shrink-0"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.08 + 0.15 }}
-          >
-            <motion.div
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                status === 'approved'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-red-100 text-red-700'
-              }`}
-              whileHover={{ scale: 1.05 }}
-            >
-              <StatusIcon className="w-4 h-4" />
-              <span className="font-medium text-sm">{config.label}</span>
-            </motion.div>
-          </motion.div>
-        </div>
-      </motion.div>
-    );
-  }
 }

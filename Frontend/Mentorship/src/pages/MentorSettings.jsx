@@ -23,26 +23,15 @@ import { BlurCard } from '../components/magicui/blur-card';
 import apiClient from '../utils/api';
 import toast from 'react-hot-toast';
 
-/**
- * MentorSettings Page Component
- * 
- * Allows mentors to:
- * - Update their profile information
- * - Change their password
- * - Manage expertise/specialization
- * - Update notification preferences
- */
 export default function MentorSettings() {
   const { user, token, login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Form state for profile updates
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
   });
 
-  // Profile completion state (for mentor-specific fields)
   const [profileCompletion, setProfileCompletion] = useState({
     bio: user?.bio || '',
     skills: user?.skills || '',
@@ -52,21 +41,18 @@ export default function MentorSettings() {
     location: user?.location || '',
   });
 
-  // Password change state
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
-  // Notification preferences
   const [notificationPrefs, setNotificationPrefs] = useState({
     emailNotifications: true,
     mentorshipAlerts: true,
     weeklyDigest: false,
   });
 
-  // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -76,10 +62,7 @@ export default function MentorSettings() {
   const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'password', 'notifications'
   const [errors, setErrors] = useState({});
 
-  /**
-   * Validate profile form
-   */
-  const validateProfileForm = () => {
+    const validateProfileForm = () => {
     const newErrors = {};
 
     if (!formData.fullName.trim()) {
@@ -93,19 +76,13 @@ export default function MentorSettings() {
     return newErrors;
   };
 
-  /**
-   * Calculate profile completion percentage
-   */
-  const calculateProfileCompletion = () => {
+    const calculateProfileCompletion = () => {
     const fields = Object.values(profileCompletion);
     const filledFields = fields.filter((field) => field && field.toString().trim().length > 0).length;
     return Math.round((filledFields / fields.length) * 100);
   };
 
-  /**
-   * Validate password form
-   */
-  const validatePasswordForm = () => {
+    const validatePasswordForm = () => {
     const newErrors = {};
 
     if (!passwordData.currentPassword) {
@@ -135,10 +112,7 @@ export default function MentorSettings() {
     return newErrors;
   };
 
-  /**
-   * Handle profile input changes
-   */
-  const handleProfileChange = (e) => {
+    const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -152,10 +126,7 @@ export default function MentorSettings() {
     }
   };
 
-  /**
-   * Handle profile completion input changes
-   */
-  const handleProfileCompletionChange = (e) => {
+    const handleProfileCompletionChange = (e) => {
     const { name, value } = e.target;
     setProfileCompletion((prev) => ({
       ...prev,
@@ -169,10 +140,7 @@ export default function MentorSettings() {
     }
   };
 
-  /**
-   * Handle password input changes
-   */
-  const handlePasswordChange = (e) => {
+    const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({
       ...prev,
@@ -186,20 +154,14 @@ export default function MentorSettings() {
     }
   };
 
-  /**
-   * Handle notification preferences changes
-   */
-  const handleNotificationChange = (key) => {
+    const handleNotificationChange = (key) => {
     setNotificationPrefs((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
   };
 
-  /**
-   * Handle profile update submission
-   */
-  const handleProfileUpdate = async (e) => {
+    const handleProfileUpdate = async (e) => {
     e.preventDefault();
 
     const formErrors = validateProfileForm();
@@ -228,6 +190,7 @@ export default function MentorSettings() {
       toast.success('Profile updated successfully!');
       setErrors({});
     } catch (err) {
+        console.error("Error:", err);
       const errorMessage =
         err.response?.data?.message || 'Failed to update profile. Please try again.';
       toast.error(errorMessage);
@@ -237,10 +200,7 @@ export default function MentorSettings() {
     }
   };
 
-  /**
-   * Handle profile completion submission
-   */
-  const handleProfileCompletionSave = async (e) => {
+    const handleProfileCompletionSave = async (e) => {
     e.preventDefault();
 
     try {
@@ -273,6 +233,7 @@ export default function MentorSettings() {
       toast.success('Profile completed successfully!');
       setErrors({});
     } catch (err) {
+        console.error("Error:", err);
       const errorMessage =
         err.response?.data?.message || 'Failed to complete profile. Please try again.';
       toast.error(errorMessage);
@@ -282,10 +243,7 @@ export default function MentorSettings() {
     }
   };
 
-  /**
-   * Handle password change submission
-   */
-  const handlePasswordChangeSubmit = async (e) => {
+    const handlePasswordChangeSubmit = async (e) => {
     e.preventDefault();
 
     const formErrors = validatePasswordForm();
@@ -315,6 +273,7 @@ export default function MentorSettings() {
       toast.success('Password changed successfully!');
       setErrors({});
     } catch (err) {
+        console.error("Error:", err);
       const errorMessage =
         err.response?.data?.message || 'Failed to change password. Please try again.';
       toast.error(errorMessage);
@@ -324,10 +283,7 @@ export default function MentorSettings() {
     }
   };
 
-  /**
-   * Handle notification preferences save
-   */
-  const handleNotificationSave = async (e) => {
+    const handleNotificationSave = async (e) => {
     e.preventDefault();
 
     try {
@@ -344,6 +300,7 @@ export default function MentorSettings() {
       toast.success('Notification preferences updated!');
       setErrors({});
     } catch (err) {
+        console.error("Error:", err);
       const errorMessage =
         err.response?.data?.message || 'Failed to update preferences. Please try again.';
       toast.error(errorMessage);

@@ -18,34 +18,19 @@ export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  /**
-   * Handle input change for email and password
-   */
-  const handleInputChange = (e) => {
+    const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
-  /**
-   * Handle login form submission
-   * 
-   * Flow:
-   * 1. Validate email and password are not empty
-   * 2. Normalize email (lowercase + trim)
-   * 3. Send POST request to /api/auth/login
-   * 4. On success: Store token, update context, redirect to dashboard
-   * 5. On error: Show error message and stop loader
-   */
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validate fields are not empty
     if (!formData.email.trim() || !formData.password) {
       setError('Please provide both email and password');
       return;
@@ -54,37 +39,29 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Prepare login credentials
       const credentials = {
         email: formData.email.toLowerCase().trim(),
         password: formData.password,
       };
 
-      // Call backend login API
       const response = await apiClient.post('/auth/login', credentials);
 
-      // Validate response structure
       if (!response.data || !response.data.success || !response.data.data) {
         throw new Error(response.data?.message || 'Login failed');
       }
 
       const { data, message } = response.data;
 
-      // Validate token exists
       if (!data.token) {
         throw new Error('No authentication token received');
       }
 
-      // Store token based on "Remember Me" preference
       if (formData.rememberMe) {
-        // Store in localStorage for persistent login
         localStorage.setItem('token', data.token);
       } else {
-        // Store in sessionStorage for session-only login
         sessionStorage.setItem('token', data.token);
       }
 
-      // Update AuthContext with user data
       login(
         {
           id: data.id,
@@ -95,10 +72,8 @@ export default function Login() {
         data.token
       );
 
-      // Show success message
       toast.success(message || 'Login successful!');
 
-      // Redirect based on role
       const redirectPath = 
         data.role === 'mentor' ? '/mentor/dashboard' :
         data.role === 'admin' ? '/admin' :
@@ -106,10 +81,9 @@ export default function Login() {
       
       navigate(redirectPath);
     } catch (err) {
-      // Stop loading
+        console.error("Error:", err);
       setIsLoading(false);
 
-      // Extract error message
       let errorMessage = 'Login failed. Please try again.';
 
       if (err.response?.data?.message) {
@@ -118,10 +92,8 @@ export default function Login() {
         errorMessage = 'Invalid email or password';
       } else if (err.request) {
         errorMessage = 'Unable to connect to server. Please try again.';
-        console.error('Network error:', err.request);
       } else {
         errorMessage = err.message || errorMessage;
-        console.error('Login error:', err);
       }
 
       setError(errorMessage);

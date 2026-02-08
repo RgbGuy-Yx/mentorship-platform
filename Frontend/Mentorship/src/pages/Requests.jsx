@@ -28,52 +28,37 @@ import apiClient from '../utils/api';
 import toast from 'react-hot-toast';
 import MentorProfileModal from '../components/MentorProfileModal';
 
-/**
- * Requests Component
- * 
- * Allows students to view all mentorship requests they've sent
- * - View mentor details for each request
- * - See request status (pending, accepted, rejected)
- * - Track request timeline
- * - Navigate to mentor profiles or message mentors
- */
 export default function Requests() {
   const { user, isLoading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Component state
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Modal state
   const [selectedMentorId, setSelectedMentorId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  /**
-   * Fetch student's mentorship requests on mount
-   */
-  useEffect(() => {
+    useEffect(() => {
     const fetchRequests = async () => {
       try {
         setError('');
         setIsLoading(true);
 
-        // Fetch all requests sent by this student
         const endpoint = filterStatus === 'all' 
           ? '/requests/my-requests' 
           : `/requests/my-requests?status=${filterStatus}`;
         
         const response = await apiClient.get(endpoint);
 
-        // Validate response structure
         if (!response.data || !response.data.data) {
           throw new Error(response.data?.message || 'Failed to fetch requests');
         }
 
         setRequests(response.data.data || []);
       } catch (err) {
+        console.error("Error:", err);
         let errorMessage = 'Failed to load your mentorship requests. Please try again.';
 
         if (err.response?.status === 401) {
@@ -83,9 +68,7 @@ export default function Requests() {
           errorMessage = err.response.data.message;
         } else if (err.request) {
           errorMessage = 'Unable to connect to server. Please check your connection.';
-          console.error('Network error:', err.request);
         } else {
-          console.error('Error fetching requests:', err);
         }
 
         setError(errorMessage);
@@ -100,10 +83,7 @@ export default function Requests() {
     }
   }, [authLoading, navigate, filterStatus]);
 
-  /**
-   * Get status badge styling
-   */
-  const getStatusStyles = (status) => {
+    const getStatusStyles = (status) => {
     const styles = {
       pending: {
         bg: 'bg-yellow-50',
@@ -133,10 +113,7 @@ export default function Requests() {
     return styles[status] || styles.pending;
   };
 
-  /**
-   * Format date to readable format
-   */
-  const formatDate = (dateString) => {
+    const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -145,10 +122,7 @@ export default function Requests() {
     });
   };
 
-  /**
-   * Calculate days since request
-   */
-  const getDaysSince = (dateString) => {
+    const getDaysSince = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
@@ -161,7 +135,6 @@ export default function Requests() {
     return `${Math.floor(diffDays / 30)} months ago`;
   };
 
-  // Show loading state
   if (isLoading && requests.length === 0) {
     return (
       <motion.div 

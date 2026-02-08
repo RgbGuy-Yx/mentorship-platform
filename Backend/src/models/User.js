@@ -31,7 +31,6 @@ const userSchema = new mongoose.Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
-    // Profile completion fields
     bio: {
       type: String,
       default: '',
@@ -62,26 +61,21 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Pre-save hook: Hash password before saving to database
 userSchema.pre('save', async function (next) {
   const user = this;
 
-  // Only hash if password is new or modified
   if (!user.isModified('password')) {
     return;
   }
 
   try {
-    // Hash the password using bcrypt with salt rounds of 10
     const hashedPassword = await bcrypt.hash(user.password, 10);
     user.password = hashedPassword;
   } catch (err) {
-    console.error('❌ Error hashing password:', err);
     throw err; // Re-throw the error to prevent saving
   }
 });
 
-// Method to compare password for login
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

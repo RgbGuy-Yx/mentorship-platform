@@ -19,13 +19,11 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { LandingNavbar } from "@/components/LandingNavbar";
 
-// Animated Number Component (kept for backward compatibility, using NumberTicker in new sections)
 function AnimatedNumber({ value }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => Math.round(latest));
   const [displayValue, setDisplayValue] = useState("0");
 
-  // Extract numeric part from value (e.g., "5,200+" -> 5200)
   const numericValue = parseInt(value.replace(/[^0-9]/g, ""));
   const suffix = value.replace(/[0-9,]/g, ""); // e.g., "+" or "/5"
 
@@ -34,7 +32,6 @@ function AnimatedNumber({ value }) {
       setDisplayValue(latest.toLocaleString() + suffix);
     });
 
-    // Trigger animation
     count.set(numericValue);
 
     return () => unsubscribe();
@@ -48,7 +45,6 @@ function AnimatedNumber({ value }) {
 }
 
 export default function Landing() {
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -69,20 +65,17 @@ export default function Landing() {
     },
   };
 
-  // Refs for AnimatedBeams
   const step1Ref = useRef(null);
   const step2Ref = useRef(null);
   const step3Ref = useRef(null);
   const step4Ref = useRef(null);
   const beamContainerRef = useRef(null);
 
-  // Section refs for navbar navigation
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
   const howItWorksRef = useRef(null);
   const mentorsRef = useRef(null);
 
-  // Mock stats data
   const stats = [
     { icon: Users, label: "Total Users", value: "847+" },
     { icon: BookOpen, label: "Total Mentors", value: "294+" },
@@ -90,7 +83,6 @@ export default function Landing() {
     { icon: Star, label: "Avg Mentor Rating", value: "4.8/5" },
   ];
 
-  // Mock features data
   const features = [
     {
       id: 1,
@@ -115,7 +107,6 @@ export default function Landing() {
     },
   ];
 
-  // Mock mentors data
   const mentors = [
     {
       id: 1,
@@ -570,6 +561,4 @@ export default function Landing() {
     </>
   );
 }
-
-
 

@@ -10,23 +10,10 @@ import { DotPattern } from '@/components/ui/dot-pattern';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import MentorProfileModal from '../components/MentorProfileModal';
 
-/**
- * Advanced MentorListing Component
- * 
- * Features:
- * - Search mentors by name, skills, expertise
- * - Filter by domain/expertise and experience level
- * - Rich mentor cards with profile data
- * - Responsive grid layout
- * - Request mentorship with state tracking
- * - Loading and empty states
- * - View mentor profile in modal
- */
 export default function MentorListing() {
   const { isLoading: authLoading, token } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Component state
   const [mentors, setMentors] = useState([]);
   const [filteredMentors, setFilteredMentors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,16 +21,13 @@ export default function MentorListing() {
   const [requestingMentorId, setRequestingMentorId] = useState(null);
   const [requestedMentors, setRequestedMentors] = useState(new Set());
 
-  // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDomain, setSelectedDomain] = useState('');
   const [selectedExperience, setSelectedExperience] = useState('');
 
-  // Modal state
   const [selectedMentorId, setSelectedMentorId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -73,7 +57,6 @@ export default function MentorListing() {
     },
   };
 
-  // Fetch mentors on mount
   useEffect(() => {
     const fetchMentorsAndRequests = async () => {
       if (!token) {
@@ -95,7 +78,6 @@ export default function MentorListing() {
         setMentors(mentorsList);
         setFilteredMentors(mentorsList);
 
-        // Fetch student's existing requests
         try {
           const requestsResponse = await apiClient.get('/requests/my-requests');
           if (requestsResponse.data && requestsResponse.data.data) {
@@ -105,9 +87,10 @@ export default function MentorListing() {
             setRequestedMentors(requestedMentorIds);
           }
         } catch (err) {
-          console.log('Could not load existing requests');
+        console.error("Error:", err);
         }
       } catch (err) {
+        console.error("Error:", err);
         let errorMessage = 'Failed to load mentors. Please try again.';
 
         if (err.response?.status === 401) {
@@ -117,9 +100,7 @@ export default function MentorListing() {
           errorMessage = err.response.data.message;
         } else if (err.request) {
           errorMessage = 'Unable to connect to server. Please check your connection.';
-          console.error('Network error:', err.request);
         } else {
-          console.error('Error fetching mentors:', err);
         }
 
         setError(errorMessage);
@@ -134,11 +115,9 @@ export default function MentorListing() {
     }
   }, [token, navigate, authLoading]);
 
-  // Apply search and filters
   useEffect(() => {
     let results = mentors;
 
-    // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       results = results.filter((mentor) => {
@@ -150,14 +129,12 @@ export default function MentorListing() {
       });
     }
 
-    // Domain filter
     if (selectedDomain) {
       results = results.filter((mentor) =>
         mentor.expertise?.toLowerCase() === selectedDomain.toLowerCase()
       );
     }
 
-    // Experience filter
     if (selectedExperience) {
       results = results.filter((mentor) => {
         const expText = (mentor.experience || '').toString().toLowerCase();
@@ -171,10 +148,8 @@ export default function MentorListing() {
     setFilteredMentors(results);
   }, [searchTerm, selectedDomain, selectedExperience, mentors]);
 
-  // Get unique domains from mentors
   const uniqueDomains = [...new Set(mentors.map((m) => m.expertise).filter(Boolean))];
 
-  // Handle mentorship request
   const handleRequestMentorship = async (mentorId) => {
     if (requestedMentors.has(mentorId)) {
       toast.success('Request already sent to this mentor');
@@ -193,6 +168,7 @@ export default function MentorListing() {
       setRequestedMentors((prev) => new Set([...prev, mentorId]));
       toast.success('Mentorship request sent!');
     } catch (err) {
+        console.error("Error:", err);
       let errorMessage = 'Failed to send request. Please try again.';
 
       if (err.response?.status === 401) {
@@ -204,9 +180,7 @@ export default function MentorListing() {
         errorMessage = err.response.data.message;
       } else if (err.request) {
         errorMessage = 'Unable to connect to server.';
-        console.error('Network error:', err.request);
       } else {
-        console.error('Error requesting mentorship:', err);
       }
 
       toast.error(errorMessage);
@@ -215,14 +189,12 @@ export default function MentorListing() {
     }
   };
 
-  // Clear filters
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedDomain('');
     setSelectedExperience('');
   };
 
-  // Get initials for avatar
   const getInitials = (name) => {
     return name
       ?.split(' ')

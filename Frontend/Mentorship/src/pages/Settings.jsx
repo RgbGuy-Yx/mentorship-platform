@@ -25,32 +25,20 @@ import { ShimmerButton } from '@/components/ui/shimmer-button';
 import apiClient from '../utils/api';
 import toast from 'react-hot-toast';
 
-/**
- * Settings Page Component
- * 
- * Allows users to:
- * - Update their profile information (fullName)
- * - Change their password
- * - View account details
- * - Manage account settings
- */
 export default function Settings() {
   const { user, token, login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Form state for profile updates
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
   });
 
-  // Password change state
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
-  // Profile completion state
   const [profileCompletion, setProfileCompletion] = useState({
     bio: user?.bio || '',
     dateOfBirth: user?.dateOfBirth || '',
@@ -60,7 +48,6 @@ export default function Settings() {
     goals: user?.goals || '',
   });
 
-  // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -70,7 +57,6 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'complete-profile', or 'password'
   const [errors, setErrors] = useState({});
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -91,11 +77,7 @@ export default function Settings() {
     },
   };
 
-  /**
-   * Validate profile form
-   * Returns object with validation errors
-   */
-  const validateProfileForm = () => {
+    const validateProfileForm = () => {
     const newErrors = {};
 
     if (!formData.fullName.trim()) {
@@ -109,11 +91,7 @@ export default function Settings() {
     return newErrors;
   };
 
-  /**
-   * Validate password form
-   * Returns object with validation errors
-   */
-  const validatePasswordForm = () => {
+    const validatePasswordForm = () => {
     const newErrors = {};
 
     if (!passwordData.currentPassword) {
@@ -143,19 +121,13 @@ export default function Settings() {
     return newErrors;
   };
 
-  /**
-   * Calculate profile completion percentage
-   */
-  const calculateProfileCompletion = () => {
+    const calculateProfileCompletion = () => {
     const fields = Object.values(profileCompletion);
     const filledFields = fields.filter((field) => field && field.toString().trim().length > 0).length;
     return Math.round((filledFields / fields.length) * 100);
   };
 
-  /**
-   * Handle profile completion input changes
-   */
-  const handleProfileCompletionChange = (e) => {
+    const handleProfileCompletionChange = (e) => {
     const { name, value } = e.target;
     setProfileCompletion((prev) => ({
       ...prev,
@@ -169,10 +141,7 @@ export default function Settings() {
     }
   };
 
-  /**
-   * Handle profile completion submission
-   */
-  const handleProfileCompletionSave = async (e) => {
+    const handleProfileCompletionSave = async (e) => {
     e.preventDefault();
 
     try {
@@ -205,6 +174,7 @@ export default function Settings() {
       toast.success('Profile completed successfully!');
       setErrors({});
     } catch (err) {
+        console.error("Error:", err);
       const errorMessage =
         err.response?.data?.message || 'Failed to complete profile. Please try again.';
       toast.error(errorMessage);
@@ -214,16 +184,12 @@ export default function Settings() {
     }
   };
 
-  /**
-   * Handle profile form input changes
-   */
-  const handleProfileChange = (e) => {
+    const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -232,16 +198,12 @@ export default function Settings() {
     }
   };
 
-  /**
-   * Handle password form input changes
-   */
-  const handlePasswordChange = (e) => {
+    const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -250,13 +212,9 @@ export default function Settings() {
     }
   };
 
-  /**
-   * Handle profile update submission
-   */
-  const handleProfileUpdate = async (e) => {
+    const handleProfileUpdate = async (e) => {
     e.preventDefault();
 
-    // Validate form
     const formErrors = validateProfileForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
@@ -266,8 +224,6 @@ export default function Settings() {
     try {
       setIsLoading(true);
 
-      // Send update request to backend
-      // Note: This endpoint needs to be created in the backend
       const response = await apiClient.put('/users/profile', {
         fullName: formData.fullName.trim(),
       });
@@ -276,14 +232,13 @@ export default function Settings() {
         throw new Error(response.data?.message || 'Failed to update profile');
       }
 
-      // Update user in context
       const updatedUser = { ...user, fullName: formData.fullName.trim() };
       login(updatedUser, token);
 
-      // Show success message
       toast.success('Profile updated successfully!');
       setErrors({});
     } catch (err) {
+        console.error("Error:", err);
       const errorMessage =
         err.response?.data?.message || 'Failed to update profile. Please try again.';
       toast.error(errorMessage);
@@ -293,13 +248,9 @@ export default function Settings() {
     }
   };
 
-  /**
-   * Handle password change submission
-   */
-  const handlePasswordChange_Submit = async (e) => {
+    const handlePasswordChange_Submit = async (e) => {
     e.preventDefault();
 
-    // Validate form
     const formErrors = validatePasswordForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
@@ -309,8 +260,6 @@ export default function Settings() {
     try {
       setIsLoading(true);
 
-      // Send password change request to backend
-      // Note: This endpoint needs to be created in the backend
       const response = await apiClient.post('/auth/change-password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
@@ -320,17 +269,16 @@ export default function Settings() {
         throw new Error(response.data?.message || 'Failed to change password');
       }
 
-      // Clear password fields
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
 
-      // Show success message
       toast.success('Password changed successfully!');
       setErrors({});
     } catch (err) {
+        console.error("Error:", err);
       const errorMessage =
         err.response?.data?.message || 'Failed to change password. Please try again.';
       toast.error(errorMessage);

@@ -4,7 +4,6 @@ import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Navbar() {
-  // Mock state - will be replaced with context/auth later
   const isAuthenticated = false; // Change to true to test authenticated state
   const userRole = "user"; // "user" or "admin"
   
@@ -14,7 +13,6 @@ export default function Navbar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Navigation items based on authentication state
   const getNavItems = () => {
     if (!isAuthenticated) {
       return [

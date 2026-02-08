@@ -1,21 +1,11 @@
-// Import required dependencies
 import User from '../models/User.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-/**
- * SIGNUP (REGISTER) CONTROLLER
- * Creates a new user account with validated credentials
- * 
- * Required fields: fullName, email, password
- * Optional fields: rolePreference
- */
 const register = async (req, res) => {
   try {
-    // Extract and normalize user input
     const { fullName, email, password, rolePreference } = req.body;
 
-    // Validate required fields
     if (!fullName || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -23,10 +13,8 @@ const register = async (req, res) => {
       });
     }
 
-    // Normalize email: lowercase and trim
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Validate email format using regex
     const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
     if (!emailRegex.test(normalizedEmail)) {
       return res.status(400).json({
@@ -35,7 +23,6 @@ const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({
@@ -44,7 +31,6 @@ const register = async (req, res) => {
       });
     }
 
-    // Determine role and mentorStatus
     let role = 'student';
     let mentorStatus = 'pending';
 
@@ -56,7 +42,6 @@ const register = async (req, res) => {
       mentorStatus = 'approved'; // Admins don't need approval
     }
 
-    // Create new user - DO NOT hash password here, let pre-save hook handle it
     const newUser = await User.create({
       fullName: fullName.trim(),
       email: normalizedEmail,
@@ -65,9 +50,7 @@ const register = async (req, res) => {
       mentorStatus,
     });
 
-    // Generate JWT token
     if (!process.env.JWT_SECRET) {
-      console.error('❌ JWT_SECRET not configured');
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
@@ -85,7 +68,6 @@ const register = async (req, res) => {
       }
     );
 
-    // Return success response (no password included)
     return res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -100,7 +82,6 @@ const register = async (req, res) => {
   } catch (error) {
     console.error('❌ Registration error:', error.message);
 
-    // Handle validation errors from Mongoose
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({
@@ -110,7 +91,6 @@ const register = async (req, res) => {
       });
     }
 
-    // Return generic server error
     return res.status(500).json({
       success: false,
       message: 'Registration failed',
@@ -118,19 +98,10 @@ const register = async (req, res) => {
   }
 };
 
-
-/**
- * LOGIN CONTROLLER
- * Authenticates user credentials and returns JWT token
- * 
- * Required fields: email, password
- */
 const login = async (req, res) => {
   try {
-    // Extract credentials
     const { email, password } = req.body;
 
-    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -138,13 +109,10 @@ const login = async (req, res) => {
       });
     }
 
-    // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find user by email and include password field
     const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
-    // If user not found, return generic error
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -152,10 +120,8 @@ const login = async (req, res) => {
       });
     }
 
-    // Compare passwords using bcrypt
     const isPasswordMatch = await bcrypt.compare(password, user.password);
 
-    // If password doesn't match, return generic error
     if (!isPasswordMatch) {
       return res.status(400).json({
         success: false,
@@ -163,16 +129,13 @@ const login = async (req, res) => {
       });
     }
 
-    // Verify JWT_SECRET is configured
     if (!process.env.JWT_SECRET) {
-      console.error('❌ JWT_SECRET not configured');
       return res.status(500).json({
         success: false,
         message: 'Server configuration error',
       });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       {
         userId: user._id,
@@ -184,7 +147,6 @@ const login = async (req, res) => {
       }
     );
 
-    // Return success response (no password included)
     return res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -207,20 +169,11 @@ const login = async (req, res) => {
   }
 };
 
-/**
- * CHANGE PASSWORD CONTROLLER
- * Allows authenticated users to change their password
- * 
- * Required fields: currentPassword, newPassword
- * - Verifies current password before allowing change
- * - Protected route (requires authentication)
- */
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.userId; // From auth middleware
 
-    // Validate required fields
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         success: false,
@@ -228,7 +181,6 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Validate new password length
     if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
@@ -236,7 +188,6 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Prevent using same password as current
     if (currentPassword === newPassword) {
       return res.status(400).json({
         success: false,
@@ -244,7 +195,6 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Find user by ID and include password field
     const user = await User.findById(userId).select('+password');
 
     if (!user) {
@@ -254,7 +204,6 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Verify current password
     const isPasswordMatch = await user.matchPassword(currentPassword);
 
     if (!isPasswordMatch) {
@@ -264,7 +213,6 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Update password
     user.password = newPassword;
     user.markModified('password'); // Explicitly mark password as modified for Mongoose
     await user.save();

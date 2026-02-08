@@ -20,7 +20,6 @@ const LandingNavbar = ({ heroRef, featuresRef, howItWorksRef, mentorsRef }) => {
     }
   }
 
-  // Handle dashboard navigation based on user role
   const handleDashboardClick = () => {
     if (!isAuthenticated) {
       navigate('/login')
@@ -35,7 +34,6 @@ const LandingNavbar = ({ heroRef, featuresRef, howItWorksRef, mentorsRef }) => {
     navigate(dashboardPath)
   }
 
-  // Handle logout
   const handleLogout = () => {
     logout()
     navigate('/')

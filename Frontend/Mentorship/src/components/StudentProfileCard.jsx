@@ -13,20 +13,9 @@ import {
   Star,
 } from 'lucide-react';
 
-/**
- * StudentProfileCard Component
- * 
- * Displays a modal view of a student's profile with:
- * - Basic information (name, email, location)
- * - Profile completion status
- * - Skills and expertise
- * - Goals and aspirations
- * - Bio and current role
- */
 export default function StudentProfileCard({ student, isOpen, onClose }) {
   if (!isOpen || !student) return null;
 
-  // Calculate profile completion percentage
   const calculateCompletion = () => {
     const fields = [
       student.bio,

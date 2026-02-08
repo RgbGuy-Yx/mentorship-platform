@@ -35,21 +35,15 @@ import { ShimmerButton } from '../components/ui/shimmer-button';
 import apiClient from '../utils/api';
 import toast from 'react-hot-toast';
 
-/**
- * MentorDashboard Component - Redesigned
- * 
- * Modern dashboard for mentors featuring:
- * - Overview statistics with animated counters
- * - Organized mentorship request management
- * - Smooth Framer Motion animations
- * - Minimalistic design aligned with landing page
- * - Responsive sidebar navigation
- */
 export default function MentorDashboard() {
-  const { user, isLoading: authLoading } = useContext(AuthContext);
+  const { user, isLoading: authLoading, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Component state
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -60,10 +54,7 @@ export default function MentorDashboard() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showStudentProfile, setShowStudentProfile] = useState(false);
 
-  /**
-   * Fetch mentorship requests on component mount
-   */
-  useEffect(() => {
+    useEffect(() => {
     const fetchRequests = async () => {
       try {
         setError('');
@@ -77,6 +68,7 @@ export default function MentorDashboard() {
 
         setRequests(response.data.data || []);
       } catch (err) {
+        console.error("Error:", err);
         let errorMessage = 'Failed to load mentorship requests. Please try again.';
 
         if (err.response?.status === 401) {
@@ -86,9 +78,7 @@ export default function MentorDashboard() {
           errorMessage = err.response.data.message;
         } else if (err.request) {
           errorMessage = 'Unable to connect to server. Please check your connection.';
-          console.error('Network error:', err.request);
         } else {
-          console.error('Error fetching requests:', err);
         }
 
         setError(errorMessage);
@@ -103,10 +93,7 @@ export default function MentorDashboard() {
     }
   }, [authLoading, navigate]);
 
-  /**
-   * Handle request action (Accept or Reject)
-   */
-  const handleRequestAction = async (requestId, status) => {
+    const handleRequestAction = async (requestId, status) => {
     try {
       setActioningRequestId(requestId);
 
@@ -127,6 +114,7 @@ export default function MentorDashboard() {
       const actionText = status === 'accepted' ? 'accepted' : 'rejected';
       toast.success(`Request ${actionText}!`);
     } catch (err) {
+        console.error("Error:", err);
       let errorMessage = 'Failed to update request. Please try again.';
 
       if (err.response?.status === 401) {
@@ -136,9 +124,7 @@ export default function MentorDashboard() {
         errorMessage = err.response.data.message;
       } else if (err.request) {
         errorMessage = 'Unable to connect to server.';
-        console.error('Network error:', err.request);
       } else {
-        console.error('Error updating request:', err);
       }
 
       toast.error(errorMessage);
@@ -147,20 +133,14 @@ export default function MentorDashboard() {
     }
   };
 
-  /**
-   * Calculate statistics for dashboard overview
-   */
-  const stats = {
+    const stats = {
     pending: requests.filter((r) => r.status === 'pending').length,
     accepted: requests.filter((r) => r.status === 'accepted').length,
     rejected: requests.filter((r) => r.status === 'rejected').length,
     total: requests.length,
   };
 
-  /**
-   * Filter requests based on selected status
-   */
-  const filteredRequests =
+    const filteredRequests =
     filterStatus === 'all'
       ? requests
       : requests.filter((r) => r.status === filterStatus);
@@ -192,7 +172,11 @@ export default function MentorDashboard() {
         >
           {/* Logo Section */}
           <div className="p-6 border-b border-slate-100">
-            <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.05 }}>
+            <motion.button 
+              onClick={() => navigate('/')}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity w-full"
+              whileHover={{ scale: 1.05 }}
+            >
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                 M
               </div>
@@ -200,7 +184,7 @@ export default function MentorDashboard() {
                 <h1 className="font-bold text-lg text-slate-900">Mentorship</h1>
                 <p className="text-xs text-slate-500">Platform</p>
               </div>
-            </motion.div>
+            </motion.button>
           </div>
 
           {/* Navigation Items */}
@@ -213,8 +197,12 @@ export default function MentorDashboard() {
               <motion.button
                 key={idx}
                 onClick={() => {
-                  setActiveSection(item.id);
-                  setSidebarOpen(false);
+                  if (item.id === 'dashboard' && item.label === 'Home') {
+                    navigate('/');
+                  } else {
+                    setActiveSection(item.id);
+                    setSidebarOpen(false);
+                  }
                 }}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center justify-between text-sm font-medium group ${
                   activeSection === item.id
@@ -236,6 +224,19 @@ export default function MentorDashboard() {
               </motion.button>
             ))}
           </nav>
+
+          {/* Logout Button */}
+          <div className="p-4 border-t border-slate-200">
+            <motion.button
+              onClick={handleLogout}
+              className="w-full px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <LogOut size={18} />
+              Logout
+            </motion.button>
+          </div>
         </motion.div>
 
         {/* Mobile Sidebar */}
@@ -622,9 +623,6 @@ export default function MentorDashboard() {
   );
 }
 
-/**
- * MyMenteesSection Component - Shows accepted mentorship requests (active mentees)
- */
 function MyMenteesSection({ requests, isLoading, error, onViewProfile }) {
   const acceptedRequests = requests.filter((r) => r.status === 'accepted');
 
@@ -788,9 +786,6 @@ function MyMenteesSection({ requests, isLoading, error, onViewProfile }) {
   );
 }
 
-/**
- * RequestCard Component - Individual request card with actions
- */
 function RequestCard({ request, onAction, onViewProfile, isActioning, delay }) {
   const getStatusConfig = (status) => {
     const configs = {
@@ -914,9 +909,6 @@ function RequestCard({ request, onAction, onViewProfile, isActioning, delay }) {
   );
 }
 
-/**
- * EmptyState Component - Displayed when no requests match the filter
- */
 function EmptyState({ filterStatus }) {
   const messages = {
     all: {

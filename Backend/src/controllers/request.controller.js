@@ -1,31 +1,11 @@
-/**
- * Mentorship Request Controller
- *
- * Handles all business logic for mentorship requests:
- * - Creating requests from students
- * - Retrieving requests for mentors
- * - Updating request status (accept/reject)
- */
 
 import MentorshipRequest from '../models/MentorshipRequest.js';
 import User from '../models/User.js';
 
-/**
- * Create a new mentorship request
- *
- * POST /requests
- * - Only students can create requests
- * - Creates a pending request to a specific mentor
- *
- * Request body: { mentorId }
- * Returns: { success: true, data: newRequest }
- */
 const createRequest = async (req, res) => {
   try {
-    // Extract mentorId from request body
     const { mentorId } = req.body;
 
-    // Validate mentorId is provided
     if (!mentorId) {
       return res.status(400).json({
         success: false,
@@ -33,7 +13,6 @@ const createRequest = async (req, res) => {
       });
     }
 
-    // Verify the mentor exists and has 'mentor' or 'admin' role
     const mentor = await User.findById(mentorId);
 
     if (!mentor) {
@@ -50,8 +29,6 @@ const createRequest = async (req, res) => {
       });
     }
 
-    // Verify the mentor is APPROVED before allowing request
-    // Students cannot request pending or rejected mentors
     if (mentor.mentorStatus !== 'approved') {
       return res.status(400).json({
         success: false,
@@ -59,8 +36,6 @@ const createRequest = async (req, res) => {
       });
     }
 
-    // Prevent student from creating duplicate request to same mentor
-    // Check for pending or accepted requests
     const existingRequest = await MentorshipRequest.findOne({
       student: req.user.userId,
       mentor: mentorId,
@@ -78,14 +53,12 @@ const createRequest = async (req, res) => {
       });
     }
 
-    // Create the mentorship request
     const newRequest = await MentorshipRequest.create({
       student: req.user.userId, // req.user.userId set by authMiddleware
       mentor: mentorId,
       status: 'pending',
     });
 
-    // Populate references for response
     const populatedRequest = await newRequest.populate([
       { path: 'student', select: 'fullName email bio dateOfBirth location currentRole skills goals' },
       { path: 'mentor', select: 'fullName email' },
@@ -107,32 +80,18 @@ const createRequest = async (req, res) => {
   }
 };
 
-/**
- * Get all mentorship requests for logged-in mentor
- *
- * GET /requests
- * - Only mentors can view their requests
- * - Returns requests where the logged-in user is the mentor
- *
- * Query params (optional): ?status=pending
- * Returns: { success: true, data: [requests] }
- */
 const getRequests = async (req, res) => {
   try {
-    // Extract optional status filter from query params
     const { status } = req.query;
 
-    // Build query object
     const query = {
       mentor: req.user.userId, // Only get requests assigned to this mentor
     };
 
-    // Add status filter if provided
     if (status) {
       query.status = status;
     }
 
-    // Fetch requests with populated user details
     const requests = await MentorshipRequest.find(query)
       .populate('student', 'fullName email bio dateOfBirth location currentRole skills goals')
       .populate('mentor', 'fullName email')
@@ -144,8 +103,7 @@ const getRequests = async (req, res) => {
       data: requests,
       count: requests.length,
     });
-  } catch (error) {
-    console.error('Get requests error:', error.message);
+  } catch (error) {    console.error('Get student requests error:', error.message);    console.error('Get requests error:', error.message);
 
     return res.status(500).json({
       success: false,
@@ -155,24 +113,11 @@ const getRequests = async (req, res) => {
   }
 };
 
-/**
- * Update mentorship request status (accept or reject)
- *
- * PATCH /requests/:id
- * - Only the assigned mentor can update the request
- * - Updates status to 'accepted' or 'rejected'
- *
- * Params: id (request ID)
- * Body: { status: 'accepted' | 'rejected' }
- * Returns: { success: true, data: updatedRequest }
- */
 const updateRequest = async (req, res) => {
   try {
-    // Extract request ID and new status
     const { id } = req.params;
     const { status } = req.body;
 
-    // Validate status is provided and has valid value
     if (!status) {
       return res.status(400).json({
         success: false,
@@ -187,7 +132,6 @@ const updateRequest = async (req, res) => {
       });
     }
 
-    // Find the request
     const request = await MentorshipRequest.findById(id);
 
     if (!request) {
@@ -197,7 +141,6 @@ const updateRequest = async (req, res) => {
       });
     }
 
-    // Verify the logged-in user is the assigned mentor
     if (request.mentor.toString() !== req.user.userId) {
       return res.status(403).json({
         success: false,
@@ -205,7 +148,6 @@ const updateRequest = async (req, res) => {
       });
     }
 
-    // Prevent updating already resolved requests
     if (request.status !== 'pending') {
       return res.status(400).json({
         success: false,
@@ -213,11 +155,9 @@ const updateRequest = async (req, res) => {
       });
     }
 
-    // Update the request status
     request.status = status;
     const updatedRequest = await request.save();
 
-    // Populate references for response
     const populatedRequest = await updatedRequest.populate([
       { path: 'student', select: 'fullName email' },
       { path: 'mentor', select: 'fullName email' },
@@ -239,33 +179,18 @@ const updateRequest = async (req, res) => {
   }
 };
 
-/**
- * Get all mentorship requests sent by logged-in student
- *
- * GET /requests/my-requests
- * - Only students can view their own requests
- * - Returns all requests where the logged-in user is the student
- * - Includes mentor details and current status
- *
- * Query params (optional): ?status=pending
- * Returns: { success: true, data: [requests] }
- */
 const getStudentRequests = async (req, res) => {
   try {
-    // Extract optional status filter from query params
     const { status } = req.query;
 
-    // Build query object
     const query = {
       student: req.user.userId, // Only get requests created by this student
     };
 
-    // Add status filter if provided
     if (status) {
       query.status = status;
     }
 
-    // Fetch requests with populated user details
     const requests = await MentorshipRequest.find(query)
       .populate('student', 'fullName email')
       .populate('mentor', 'fullName email role')
@@ -278,7 +203,6 @@ const getStudentRequests = async (req, res) => {
       count: requests.length,
     });
   } catch (error) {
-    console.error('Get student requests error:', error.message);
 
     return res.status(500).json({
       success: false,

@@ -1,4 +1,3 @@
-// Export all Magic UI components
 export { AnimatedButton } from "./animated-button";
 export { SpotlightCard } from "./spotlight-card";
 export { BlurCard } from "./blur-card";

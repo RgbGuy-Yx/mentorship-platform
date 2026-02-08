@@ -24,56 +24,39 @@ export default function Register() {
       ...prev,
       [name]: value
     }));
-    // Clear API error when user starts typing
     if (apiError) setApiError('');
   };
 
-  /**
-   * Handle signup form submission
-   * 
-   * Flow:
-   * 1. Validate all fields
-   * 2. Show loading state
-   * 3. Call POST /api/auth/register
-   * 4. On success: Show toast, redirect to login
-   * 5. On error: Show error message and stop loader
-   */
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     setApiError('');
 
-    // Validate full name
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
 
-    // Validate email
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Validate password
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (!validatePassword(formData.password)) {
       newErrors.password = 'Password must be at least 8 characters with letters and numbers';
     }
 
-    // If there are validation errors, show them and return
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Clear validation errors if passed
     setErrors({});
     setIsLoading(true);
 
     try {
-      // Create request data object
       const registrationData = {
         fullName: formData.fullName.trim(),
         email: formData.email.toLowerCase().trim(),
@@ -81,47 +64,30 @@ export default function Register() {
         rolePreference: formData.role,
       };
 
-      // Call backend register API
       const response = await apiClient.post('/auth/register', registrationData);
 
-      // Check if response is successful
       if (!response.data || !response.data.success) {
         throw new Error(response.data?.message || 'Registration failed');
       }
 
-      // Show success message
       const message = response.data.message || 'Registration successful!';
       toast.success(message);
 
-      // Redirect to login page after 1.5 seconds
       setTimeout(() => {
         navigate('/login');
       }, 1500);
     } catch (err) {
-      // Stop loading and show error
+        console.error("Error:", err);
       setIsLoading(false);
       
-      // Enhanced error handling to show specific error messages
       let errorMessage = 'Registration failed. Please try again.';
       
       if (err.response) {
-        // Server responded with error
         errorMessage = err.response.data?.message || err.response.data?.error || errorMessage;
-        
-        // Log detailed error for debugging
-        console.error('Registration API Error:', {
-          status: err.response.status,
-          data: err.response.data,
-          message: err.response.data?.message
-        });
       } else if (err.request) {
-        // Request was made but no response received
         errorMessage = 'Unable to connect to server. Please check if the backend is running.';
-        console.error('Registration Network Error:', err.request);
       } else {
-        // Something else happened
         errorMessage = err.message || errorMessage;
-        console.error('Registration Error:', err);
       }
       
       setApiError(errorMessage);

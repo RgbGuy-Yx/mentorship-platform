@@ -24,47 +24,32 @@ import apiClient from '../utils/api';
 import toast from 'react-hot-toast';
 import MentorProfileModal from '../components/MentorProfileModal';
 
-/**
- * MyMentors Component
- * 
- * Display all mentors the student is currently connected with
- * - View mentor details for each active connection
- * - Message mentors
- * - View full mentor profiles
- * - Track connection dates
- */
 export default function MyMentors() {
   const { user, isLoading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Component state
   const [mentors, setMentors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Modal state
   const [selectedMentorId, setSelectedMentorId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  /**
-   * Fetch connected mentors (accepted requests) on mount
-   */
-  useEffect(() => {
+    useEffect(() => {
     const fetchMentors = async () => {
       try {
         setError('');
         setIsLoading(true);
 
-        // Fetch all accepted requests to get connected mentors
         const response = await apiClient.get('/requests/my-requests?status=accepted');
 
-        // Validate response structure
         if (!response.data || !response.data.data) {
           throw new Error(response.data?.message || 'Failed to fetch mentors');
         }
 
         setMentors(response.data.data || []);
       } catch (err) {
+        console.error("Error:", err);
         let errorMessage = 'Failed to load your mentors. Please try again.';
 
         if (err.response?.status === 401) {
@@ -74,9 +59,7 @@ export default function MyMentors() {
           errorMessage = err.response.data.message;
         } else if (err.request) {
           errorMessage = 'Unable to connect to server. Please check your connection.';
-          console.error('Network error:', err.request);
         } else {
-          console.error('Error fetching mentors:', err);
         }
 
         setError(errorMessage);
@@ -91,10 +74,7 @@ export default function MyMentors() {
     }
   }, [authLoading, navigate]);
 
-  /**
-   * Format date to readable format
-   */
-  const formatDate = (dateString) => {
+    const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -103,10 +83,7 @@ export default function MyMentors() {
     });
   };
 
-  /**
-   * Calculate days since connection
-   */
-  const getDaysSince = (dateString) => {
+    const getDaysSince = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
@@ -119,7 +96,6 @@ export default function MyMentors() {
     return `Connected ${Math.floor(diffDays / 30)} months ago`;
   };
 
-  // Show loading state
   if (isLoading && mentors.length === 0) {
     return (
       <motion.div 

@@ -45,7 +45,6 @@ export function Highlighter({
     margin: "-10%",
   })
 
-  // If isView is false, always show. If isView is true, wait for inView
   const shouldShow = !isView || isInView
 
   useEffect(() => {
@@ -55,12 +54,10 @@ export function Highlighter({
     if (!element) return
 
     try {
-      // Clean up previous annotation if it exists
       if (annotationRef.current) {
         try {
           annotationRef.current.remove()
         } catch (e) {
-          // Silently fail if remove throws
         }
       }
 
@@ -77,14 +74,12 @@ export function Highlighter({
       const annotation = annotate(element, annotationConfig)
       annotationRef.current = annotation
 
-      // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
         if (annotationRef.current) {
           annotationRef.current.show()
         }
       })
     } catch (error) {
-      console.error("Highlighter error:", error)
     }
 
     return () => {
@@ -94,12 +89,10 @@ export function Highlighter({
           annotationRef.current = null
         }
       } catch (e) {
-        // Silently fail
       }
     }
   }, [shouldShow, isReady, action, color, strokeWidth, animationDuration, iterations, padding, multiline])
 
-  // Set ready state after mount to avoid hydration issues
   useEffect(() => {
     setIsReady(true)
   }, [])
